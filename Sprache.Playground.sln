@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sprache.Playground", "src\Sprache.Playground\Sprache.Playground.csproj", "{5D5BEE0F-5EEA-4E15-A25A-F81894DB7BEE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sprache.Playground.UnitTests", "src\Sprache.Playground.UnitTests\Sprache.Playground.UnitTests.csproj", "{F4724B0C-067F-4C4F-B0EA-41ECB355CF3C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5D5BEE0F-5EEA-4E15-A25A-F81894DB7BEE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5D5BEE0F-5EEA-4E15-A25A-F81894DB7BEE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5D5BEE0F-5EEA-4E15-A25A-F81894DB7BEE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5D5BEE0F-5EEA-4E15-A25A-F81894DB7BEE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F4724B0C-067F-4C4F-B0EA-41ECB355CF3C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F4724B0C-067F-4C4F-B0EA-41ECB355CF3C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F4724B0C-067F-4C4F-B0EA-41ECB355CF3C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F4724B0C-067F-4C4F-B0EA-41ECB355CF3C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
