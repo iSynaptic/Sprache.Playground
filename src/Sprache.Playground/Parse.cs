@@ -1,4 +1,8 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using System.Security.Cryptography;
 
 namespace Sprache.Playground
 {
@@ -21,7 +25,11 @@ namespace Sprache.Playground
                 if (expected.Length == 0)
                     return Result.WithValue("", expected, context);
 
-                string sample = context.Input.Substring(context.Index, expected.Length);
+                var input = context.Input;
+                if(input.Length - context.Index < expected.Length)
+                    return Result.WithoutValue<String>(expected, context, new ParseError(context.Index, "Unexpected end of input"));
+
+                string sample = input.Substring(context.Index, expected.Length);
                 if (sample == expected)
                     return Result.WithValue(expected, expected, context.Advance(sample.Length));
 
@@ -61,13 +69,59 @@ namespace Sprache.Playground
             };
         }
 
+        private class OrParser<T>
+        {
+            public static OrParser<T> Or(Parser<T> left, Parser<T> right)
+            {
+                var l = left.Target as OrParser<T>;
+                var r = right.Target as OrParser<T>;
+
+                if (l != null && r != null)
+                    return new OrParser<T>(l.Parsers.Concat(r.Parsers));
+
+                if(l != null)
+                    return new OrParser<T>(l.Parsers.Concat(new []{right}));
+
+                if(r != null)
+                    return new OrParser<T>(new []{left}.Concat(r.Parsers));
+
+                return new OrParser<T>(new []{left, right});
+            }
+
+            private OrParser(IEnumerable<Parser<T>> parsers)
+            {
+                Parsers = parsers.ToArray();
+            }
+
+            public IResult<T> Parse(Context context)
+            {
+                var results = new List<IResult<T>>();
+
+                foreach (var parser in Parsers)
+                {
+                    var result = parser(context);
+                    if (result.HasValue)
+                        return result;
+
+                    results.Add(result);
+                }
+
+                string expected = string.Join(" or ", results.Select(x => x.Description));
+
+                return Result.WithoutValue<T>("or",
+                    context,
+                    new ParseError(
+                        context.Index,
+                        string.Format("Expected: {0}", expected),
+                        results.SelectMany(x => x.Errors)));
+            }
+
+            public IEnumerable<Parser<T>> Parsers { get; private set; }
+        }
+
         public static Parser<T> Or<T>(this Parser<T> first, Parser<T> second)
         {
-            return i =>
-            {
-                var fr = first(i);
-                return fr.HasValue ? fr : second(i);
-            };
+            return OrParser<T>.Or(first, second).Parse;
         }
 
         public static Parser<U> Select<T, U>(this Parser<T> @this, Func<T, U> selector)
@@ -94,6 +148,17 @@ namespace Sprache.Playground
                 }
 
                 return Result.WithoutValue<U>(result.Description, result.Context, result.Errors);
+            };
+        }
+
+        public static Parser<T> DescribeAs<T>(this Parser<T> @this, string description)
+        {
+            return context =>
+            {
+                var result = @this(context);
+                return result.HasValue 
+                    ? Result.WithValue(result.Value, description, result.Context, result.Errors) 
+                    : Result.WithoutValue<T>(description, result.Context, result.Errors);
             };
         }
 
