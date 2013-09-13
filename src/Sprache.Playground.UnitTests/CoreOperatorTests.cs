@@ -15,10 +15,10 @@ namespace Sprache.Playground.UnitTests
         public void InterleaveWith_WithMultipleInterleaves_Parses()
         {
             var parser = from greeting in Parse.String("Hello")
-                from sep in Parse.String(",")
-                from subject in Parse.String("World")
-                from punc in Parse.String("!")
-                select new {greeting, sep, subject, punc};
+                         from sep in Parse.String(",")
+                         from subject in Parse.String("World")
+                         from punc in Parse.String("!")
+                         select new {greeting, sep, subject, punc};
 
             parser = parser
                 .InterleaveWith(Parse.String(" "))

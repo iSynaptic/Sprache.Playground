@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography;
 
 namespace Sprache.Playground
 {
@@ -29,9 +27,8 @@ namespace Sprache.Playground
                 if(input.Length - context.Index < expected.Length)
                     return Result.WithoutValue<String>(expected, context, new ParseError(context.Index, "Unexpected end of input"));
 
-                string sample = input.Substring(context.Index, expected.Length);
-                if (sample == expected)
-                    return Result.WithValue(expected, expected, context.Advance(sample.Length));
+                if (string.Compare(context.Input, context.Index, expected, 0, expected.Length) == 0)
+                    return Result.WithValue(expected, expected, context.Advance(expected.Length));
 
                 return Result.WithoutValue<String>(expected, context, new ParseError(context.Index, string.Format("Expected string: \"{0}\"", expected)));
             };
@@ -69,59 +66,25 @@ namespace Sprache.Playground
             };
         }
 
-        private class OrParser<T>
+        public static Parser<T> Or<T>(this Parser<T> first, Parser<T> second)
         {
-            public static OrParser<T> Or(Parser<T> left, Parser<T> right)
+            return context =>
             {
-                var l = left.Target as OrParser<T>;
-                var r = right.Target as OrParser<T>;
+                var firstResult = first(context);
+                if (firstResult.HasValue)
+                    return firstResult;
 
-                if (l != null && r != null)
-                    return new OrParser<T>(l.Parsers.Concat(r.Parsers));
-
-                if(l != null)
-                    return new OrParser<T>(l.Parsers.Concat(new []{right}));
-
-                if(r != null)
-                    return new OrParser<T>(new []{left}.Concat(r.Parsers));
-
-                return new OrParser<T>(new []{left, right});
-            }
-
-            private OrParser(IEnumerable<Parser<T>> parsers)
-            {
-                Parsers = parsers.ToArray();
-            }
-
-            public IResult<T> Parse(Context context)
-            {
-                var results = new List<IResult<T>>();
-
-                foreach (var parser in Parsers)
-                {
-                    var result = parser(context);
-                    if (result.HasValue)
-                        return result;
-
-                    results.Add(result);
-                }
-
-                string expected = string.Join(" or ", results.Select(x => x.Description));
+                var secondResult = second(context);
+                if (secondResult.HasValue)
+                    return secondResult;
 
                 return Result.WithoutValue<T>("or",
                     context,
                     new ParseError(
                         context.Index,
-                        string.Format("Expected: {0}", expected),
-                        results.SelectMany(x => x.Errors)));
-            }
-
-            public IEnumerable<Parser<T>> Parsers { get; private set; }
-        }
-
-        public static Parser<T> Or<T>(this Parser<T> first, Parser<T> second)
-        {
-            return OrParser<T>.Or(first, second).Parse;
+                        string.Format("Expected: {0} or {1}", firstResult.Description, secondResult.Description),
+                        firstResult.Errors.Concat(secondResult.Errors)));
+            };
         }
 
         public static Parser<U> Select<T, U>(this Parser<T> @this, Func<T, U> selector)
