@@ -4,7 +4,9 @@ namespace Sprache.Playground
 {
     public class Context
     {
-        public readonly Position Position;
+        public readonly Position ConsumedTo;
+        public readonly Position ReadTo;
+
         public readonly string Input;
         public readonly char Current;
         public readonly string Name;
@@ -23,54 +25,69 @@ namespace Sprache.Playground
         }
 
         public Context(string input, string name, Parser<object> interleaving)
-            : this(input, name, interleaving, default(Position))
+            : this(input, name, interleaving, default(Position), default(Position))
         {
         }
 
-        private Context(string input, string name, Parser<object> interleaving, Position position)
+        private Context(string input, string name, Parser<object> interleaving, Position consumedTo, Position readTo)
         {
             if (input == null) throw new ArgumentNullException("input");
 
             Input = input;
-            AtEnd = input.Length == position.Index;
+            AtEnd = input.Length == readTo.Index;
 
             if (!AtEnd)
-                Current = input[position.Index];
+                Current = input[readTo.Index];
 
             Name = name ?? "";
             Interleaving = interleaving;
-            Position = position;
+
+            ConsumedTo = consumedTo;
+            ReadTo = readTo;
         }
 
-        public Context Advance() { return Advance(1); }
+        public Context Read(int count)
+        {
+            return Move(count, false);
+        }
 
-        public Context Advance(int count)
+        public Context ReadAndConsume(int count)
+        {
+            return Move(count, true);
+        }
+
+        public Context Consume()
+        {
+            return Move(0, true);
+        }
+
+        private Context Move(int count, bool consume)
         {
             if (count < 0)
                 throw new ArgumentOutOfRangeException("count");
 
-            if (count == 0)
+            if (count == 0 && consume && ConsumedTo == ReadTo)
                 return this;
 
-            int newIndex = Position.Index + count;
+            int newIndex = ReadTo.Index + count;
 
             if (AtEnd || newIndex > Input.Length)
                 throw new ArgumentException(String.Format("Advancing {0} charaters exceeds the length of the input.", count), "count");
 
-            var position = Position;
-            while (position.Index < newIndex)
+            var newReadTo = ReadTo;
+            while (newReadTo.Index < newIndex)
             {
-                position = Input[position.Index] == '\n' 
-                    ? position.AdvanceWithNewLine() 
-                    : position.Advance();
+                newReadTo = Input[newReadTo.Index] == '\n'
+                    ? newReadTo.AdvanceWithNewLine()
+                    : newReadTo.Advance();
             }
 
-            return new Context(Input, Name, Interleaving, position);
+            return new Context(Input, Name, Interleaving, consume ? newReadTo : ConsumedTo, newReadTo);
         }
 
         public Context WithInterleave(Parser<Object> interleaving)
         {
-            return new Context(Input, Name, interleaving, Position);
+            return new Context(Input, Name, interleaving, ConsumedTo, ReadTo);
         }
 
         public static implicit operator Context(string content)

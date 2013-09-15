@@ -4,6 +4,8 @@ namespace Sprache.Playground
 {
     public struct Position : IEquatable<Position>
     {
+        public static readonly Position Beginning = new Position(0, 1, 1);
+
         private readonly int _index;
         private readonly int _line;
         private readonly int _column;

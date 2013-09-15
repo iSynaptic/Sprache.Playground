@@ -14,7 +14,8 @@ namespace Sprache.Playground.UnitTests
             var ctx = new Context(input);
 
             ctx.Input.Should().Be(input);
-            ctx.Position.Should().Be(new Position(0, 1, 1));
+            ctx.ReadTo.Should().Be(Position.Beginning);
+            ctx.ConsumedTo.Should().Be(Position.Beginning);
             ctx.Name.Should().Be(String.Empty);
             ctx.AtEnd.Should().BeTrue();
             ctx.Interleaving.Should().BeNull();
@@ -27,7 +28,8 @@ namespace Sprache.Playground.UnitTests
             var ctx = new Context(input);
 
             ctx.Input.Should().Be(input);
-            ctx.Position.Should().Be(new Position(0, 1, 1));
+            ctx.ReadTo.Should().Be(Position.Beginning);
+            ctx.ConsumedTo.Should().Be(Position.Beginning);
             ctx.Current.Should().Be('H');
             ctx.Name.Should().Be(String.Empty);
             ctx.AtEnd.Should().BeFalse();
@@ -43,58 +45,49 @@ namespace Sprache.Playground.UnitTests
         }
 
         [Test]
-        public void Advance_ReturnsContext_WithNewPositionAndCurrent()
-        {
-            string input = "Hello, World!";
-            var ctx = new Context(input);
-            
-            ctx = ctx.Advance();
-
-            ctx.Position.Should().Be(new Position(1, 1, 2));
-            ctx.Current.Should().Be('e');
-        }
-
-        [Test]
-        public void AdvanceWithCount_ReturnsContext_WithNewPositionAndCurrent()
+        public void ReadWithCount_ReturnsContext_WithNewPositionAndCurrent()
         {
             string input = "Hello, World!";
             var ctx = new Context(input);
 
-            ctx = ctx.Advance(7);
+            ctx = ctx.Read(7);
 
-            ctx.Position.Should().Be(new Position(7, 1, 8));
+            ctx.ReadTo.Should().Be(new Position(7, 1, 8));
+            ctx.ConsumedTo.Should().Be(Position.Beginning);
             ctx.Current.Should().Be('W');
         }
 
         [Test]
-        public void Advance_WhenBuildingNewContext_RespectsNewLines()
+        public void Read_WhenBuildingNewContext_RespectsNewLines()
         {
             string input = "Hello\r\nWorld!";
-            var ctx = new Context(input).Advance(6);
+            var ctx = new Context(input).Read(6);
 
-            ctx.Position.Should().Be(new Position(6, 1, 7));
+            ctx.ReadTo.Should().Be(new Position(6, 1, 7));
 
-            ctx = ctx.Advance();
+            ctx = ctx.Read(1);
 
-            ctx.Position.Should().Be(new Position(7, 2, 1));
+            ctx.ReadTo.Should().Be(new Position(7, 2, 1));
+            ctx.ConsumedTo.Should().Be(Position.Beginning);
         }
 
         [Test]
-        public void AdvanceWithCount_WhenBuildingNewContext_RespectsNewLines()
+        public void ReadWithCount_WhenBuildingNewContext_RespectsNewLines()
         {
             string input = "Hello\r\nWorld!";
             var ctx = new Context(input);
             
-            ctx = ctx.Advance(7);
+            ctx = ctx.Read(7);
 
-            ctx.Position.Should().Be(new Position(7, 2, 1));
+            ctx.ReadTo.Should().Be(new Position(7, 2, 1));
+            ctx.ConsumedTo.Should().Be(Position.Beginning);
         }
 
         [Test]
         public void Advancing_ByNegativeCount_ThrowsException()
         {
             var ctx = new Context("Hello");
-            ctx.Invoking(c => c.Advance(-2)).ShouldThrow<ArgumentOutOfRangeException>();
+            ctx.Invoking(c => c.Read(-2)).ShouldThrow<ArgumentOutOfRangeException>();
         }
 
         [Test]
@@ -102,9 +95,10 @@ namespace Sprache.Playground.UnitTests
         {
             var ctx = new Context("Hello");
 
-            var newCtx = ctx.Advance(0);
+            var newCtx = ctx.Read(0);
 
-            newCtx.Position.Should().Be(ctx.Position);
+            newCtx.ReadTo.Should().Be(ctx.ReadTo);
+            newCtx.ConsumedTo.Should().Be(ctx.ConsumedTo);
             newCtx.Input.Should().Be(ctx.Input);
             newCtx.Current.Should().Be(ctx.Current);
             newCtx.Name.Should().Be(ctx.Name);
@@ -112,19 +106,30 @@ namespace Sprache.Playground.UnitTests
         }
 
         [Test]
-        public void Advance_WhenAtEnd_ThrowsException()
+        public void Read_WhenAtEnd_ThrowsException()
         {
             var ctx = new Context("");
 
-            ctx.Invoking(c => c.Advance()).ShouldThrow<ArgumentException>();
+            ctx.Invoking(c => c.Read(1)).ShouldThrow<ArgumentException>();
         }
 
         [Test]
-        public void Advance_PastEndOfInput_ThrowsException()
+        public void Read_PastEndOfInput_ThrowsException()
         {
             var ctx = new Context("Hello");
 
-            ctx.Invoking(c => c.Advance(10)).ShouldThrow<ArgumentException>();
+            ctx.Invoking(c => c.Read(10)).ShouldThrow<ArgumentException>();
+        }
+        
+        [Test]
+        public void Consume_AtBeginning_ReadAndConsumesNothing()
+        {
+            var ctx = new Context("Hello");
+
+            ctx = ctx.Consume();
+
+            ctx.ReadTo.Should().Be(Position.Beginning);
+            ctx.ConsumedTo.Should().Be(Position.Beginning);
         }
 
         [Test]
@@ -141,13 +146,14 @@ namespace Sprache.Playground.UnitTests
         [Test]
         public void WithInterleave_ReturnsContext_WithOtherValuesUnchanged()
         {
-            var ctx = new Context("Hello").Advance(3);
+            var ctx = new Context("Hello").Read(3);
 
             Parser<Object> interleaving = c => Result.WithValue<object>(42, "ultimate", c);
             var newCtx = ctx.WithInterleave(interleaving);
 
             newCtx.Input.Should().Be(ctx.Input);
-            newCtx.Position.Should().Be(ctx.Position);
+            newCtx.ReadTo.Should().Be(ctx.ReadTo);
+            newCtx.ConsumedTo.Should().Be(ctx.ConsumedTo);
             newCtx.Current.Should().Be(ctx.Current);
             newCtx.Name.Should().Be(ctx.Name);
             newCtx.AtEnd.Should().Be(ctx.AtEnd);
@@ -162,7 +168,8 @@ namespace Sprache.Playground.UnitTests
             Context ctx = input;
 
             ctx.Input.Should().Be(input);
-            ctx.Position.Should().Be(new Position(0, 1, 1));
+            ctx.ReadTo.Should().Be(Position.Beginning);
+            ctx.ConsumedTo.Should().Be(Position.Beginning);
             ctx.Current.Should().Be('H');
             ctx.Name.Should().Be(String.Empty);
             ctx.AtEnd.Should().BeFalse();
