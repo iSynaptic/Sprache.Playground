@@ -9,7 +9,7 @@ namespace Sprache.Playground
         public static Parser<char> AnyChar = context =>
         {
             if (context.AtEnd)
-                return Result.WithoutValue<char>("any character", context, new ParseError(context.Index, "Expected: any character"));
+                return Result.WithoutValue<char>("any character", context, new ParseError(context.Position, "Expected: any character"));
 
             return Result.WithValue(context.Current, "any character", context.Advance());
         };
@@ -24,13 +24,13 @@ namespace Sprache.Playground
                     return Result.WithValue("", expected, context);
 
                 var input = context.Input;
-                if(input.Length - context.Index < expected.Length)
-                    return Result.WithoutValue<String>(expected, context, new ParseError(context.Index, "Unexpected end of input"));
+                if(input.Length - context.Position.Index < expected.Length)
+                    return Result.WithoutValue<String>(expected, context, new ParseError(context.Position, "Unexpected end of input"));
 
-                if (string.Compare(context.Input, context.Index, expected, 0, expected.Length) == 0)
+                if (string.Compare(context.Input, context.Position.Index, expected, 0, expected.Length) == 0)
                     return Result.WithValue(expected, expected, context.Advance(expected.Length));
 
-                return Result.WithoutValue<String>(expected, context, new ParseError(context.Index, string.Format("Expected string: \"{0}\"", expected)));
+                return Result.WithoutValue<String>(expected, context, new ParseError(context.Position, string.Format("Expected string: \"{0}\"", expected)));
             };
         }
 
@@ -81,7 +81,7 @@ namespace Sprache.Playground
                 return Result.WithoutValue<T>("or",
                     context,
                     new ParseError(
-                        context.Index,
+                        context.Position,
                         string.Format("Expected: {0} or {1}", firstResult.Description, secondResult.Description),
                         firstResult.Errors.Concat(secondResult.Errors)));
             };

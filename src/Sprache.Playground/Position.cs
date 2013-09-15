@@ -20,6 +20,16 @@ namespace Sprache.Playground
             _column = column;
         }
 
+        public Position Advance()
+        {
+            return new Position(Index + 1, Line, Column + 1);
+        }
+
+        public Position AdvanceWithNewLine()
+        {
+            return new Position(Index + 1, Line + 1, 1);
+        }
+
         public int Index { get { return _index; } }
 
         public int Line { get { return _line == 0 ? 1 : _line; } }
