@@ -1,38 +1,35 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using FluentAssertions;
 using NUnit.Framework;
 
-namespace Sprache.Playground.UnitTests
+namespace Sprache.Playground
 {
     [TestFixture]
-    public class CoreOperatorTests
+    public partial class ParseTests
     {
         [Test]
         public void InterleaveWith_WithMultipleInterleaves_Parses()
         {
-            var parser = from greeting in Parse.String("Hello")
-                         from sep in Parse.String(",")
-                         from subject in Parse.String("World")
-                         from punc in Parse.String("!")
+            var parser = from greeting in Parse.Literal("Hello")
+                         from sep in Parse.Literal(",")
+                         from subject in Parse.Literal("World")
+                         from punc in Parse.Literal("!")
                          select new {greeting, sep, subject, punc};
 
             parser = parser
-                .InterleaveWith(Parse.String(" "))
-                .InterleaveWith(Parse.String("\r"))
-                .InterleaveWith(Parse.String("\n"));
+                .InterleaveWith(Parse.Literal(" "))
+                .InterleaveWith(Parse.Literal("\r"))
+                .InterleaveWith(Parse.Literal("\n"));
 
             var result = parser(@"  
 
-            Hello 
+            Hello
 
 ,
-   World 
+   World
 
-     ! 
+     !
 
 
     ");
@@ -51,9 +48,9 @@ namespace Sprache.Playground.UnitTests
         [Test]
         public void Or_WithNoResults_UsesDescriptionToBuildErrorMessage()
         {
-            var parser = Parse.String("public").Or(
-                         Parse.String("private")).DescribeAs("visibility modifier").Or(
-                         Parse.String("class").DescribeAs("class keyword"));
+            var parser = Parse.Literal("public").Or(
+                Parse.Literal("private")).DescribeAs("visibility modifier").Or(
+                    Parse.Literal("class").DescribeAs("class keyword"));
 
             var result = parser("D");
             result.HasValue.Should().BeFalse();

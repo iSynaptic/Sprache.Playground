@@ -7,7 +7,7 @@
     <ProjectGuid>{F4724B0C-067F-4C4F-B0EA-41ECB355CF3C}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Sprache.Playground.UnitTests</RootNamespace>
+    <RootNamespace>Sprache.Playground</RootNamespace>
     <AssemblyName>Sprache.Playground.UnitTests</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -46,7 +46,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ContextTests.cs" />
-    <Compile Include="CoreOperatorTests.cs" />
+    <Compile Include="Parse.CoreOperatorsTests.cs" />
+    <Compile Include="Parse.PrimativesTests.cs" />
     <Compile Include="PositionTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

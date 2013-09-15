@@ -2,7 +2,7 @@
 using FluentAssertions;
 using NUnit.Framework;
 
-namespace Sprache.Playground.UnitTests
+namespace Sprache.Playground
 {
     [TestFixture]
     public class ContextTests
