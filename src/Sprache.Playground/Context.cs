@@ -12,8 +12,13 @@ namespace Sprache.Playground
 
         public readonly Parser<object> Interleaving;
 
+        public Context(string input)
+            : this(input, null)
+        {
+        }
+
         public Context(string input, string name)
-            : this(input, name, null, default(Position))
+            : this(input, name, null)
         {
         }
 
@@ -41,8 +46,11 @@ namespace Sprache.Playground
 
         public Context Advance(int count)
         {
-            if (count <= 0)
+            if (count < 0)
                 throw new ArgumentOutOfRangeException("count");
+
+            if (count == 0)
+                return this;
 
             int newIndex = Position.Index + count;
 

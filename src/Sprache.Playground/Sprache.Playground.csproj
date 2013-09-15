@@ -40,6 +40,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Context.cs" />
+    <Compile Include="Hashing.cs" />
     <Compile Include="IResult.cs" />
     <Compile Include="Parse.cs" />
     <Compile Include="ParseError.cs" />

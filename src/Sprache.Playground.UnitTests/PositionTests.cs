@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using FluentAssertions;
 using NUnit.Framework;
 
@@ -65,6 +62,95 @@ namespace Sprache.Playground.UnitTests
             pos.Index.Should().Be(45);
             pos.Line.Should().Be(13);
             pos.Column.Should().Be(4);
+        }
+
+        [Test]
+        public void DefaultValues_AreEqual()
+        {
+            var left = default(Position);
+            var right = default(Position);
+
+            (left == right).Should().BeTrue();
+        }
+
+        [Test]
+        public void SameValues_AreEqual()
+        {
+            var left = new Position(42, 3, 7);
+            var right = new Position(42, 3, 7);
+
+            (left == right).Should().BeTrue();
+        }
+
+        [Test]
+        public void DifferenceValues_AreNotEqual()
+        {
+            var left = new Position(42, 3, 13);
+
+            var diffIndex = new Position(84, 3, 13);
+            var diffLine = new Position(42, 7, 13);
+            var diffColumn = new Position(42, 3, 22);
+
+            (left != diffIndex).Should().BeTrue();
+            (left != diffLine).Should().BeTrue();
+            (left != diffColumn).Should().BeTrue();
+        }
+
+        [Test]
+        public void NullValue_IsNotEqual()
+        {
+            var pos = default(Position);
+            pos.Equals(null).Should().BeFalse();
+        }
+
+        [Test]
+        public void NonPositionValue_IsNotEqual()
+        {
+            var pos = default(Position);
+            pos.Equals("Hello!").Should().BeFalse();
+        }
+
+        [Test]
+        public void SameValue_WhenProvidedAsObject_AreEqual()
+        {
+            var left = new Position(42, 4, 13);
+            object right = new Position(42, 4, 13);
+
+            left.Equals(right).Should().BeTrue();
+        }
+
+        [Test]
+        public void SameValues_HaveSameHashCode()
+        {
+            var left = new Position(42, 4, 13);
+            var right = new Position(42, 4, 13);
+
+            var leftHash = left.GetHashCode();
+            var rightHash = right.GetHashCode();
+
+            leftHash.Should().Be(rightHash);
+        }
+
+        [Test]
+        public void Advance_IncrementsIndexAndColumn()
+        {
+            var pos = new Position(42, 4, 13);
+            var newPos = pos.Advance();
+
+            newPos.Index.Should().Be(43);
+            newPos.Line.Should().Be(4);
+            newPos.Column.Should().Be(14);
+        }
+
+        [Test]
+        public void AdvanceWithNewLine_IncrementsIndexAndLineAndResetsColumn()
+        {
+            var pos = new Position(42, 4, 13);
+            var newPos = pos.AdvanceWithNewLine();
+
+            newPos.Index.Should().Be(43);
+            newPos.Line.Should().Be(5);
+            newPos.Column.Should().Be(1);
         }
     }
 }

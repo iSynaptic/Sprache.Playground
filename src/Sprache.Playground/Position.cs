@@ -2,7 +2,7 @@
 
 namespace Sprache.Playground
 {
-    public struct Position
+    public struct Position : IEquatable<Position>
     {
         private readonly int _index;
         private readonly int _line;
@@ -29,6 +29,44 @@ namespace Sprache.Playground
         {
             return new Position(Index + 1, Line + 1, 1);
         }
+
+        public bool Equals(Position other)
+        {
+            return Index == other.Index &&
+                   Line == other.Line &&
+                   Column == other.Column;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(obj, null)) return false;
+            if (GetType() != obj.GetType()) return false;
+
+            Position other = (Position) obj;
+            return Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            int hash = 1;
+
+            hash = Hashing.MixJenkins32(hash + Index);
+            hash = Hashing.MixJenkins32(hash + Line);
+            hash = Hashing.MixJenkins32(hash + Column);
+
+            return hash;
+        }
+
+        public static Boolean operator ==(Position left, Position right)
+        {
+            return left.Equals(right);
+        }
+
+        public static Boolean operator !=(Position left, Position right)
+        {
+            return !(left.Equals(right));
+        }
+
 
         public int Index { get { return _index; } }
 
