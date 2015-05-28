@@ -26,7 +26,7 @@ namespace Sprache.Playground
             result.Context.ReadTo.Should().Be(Position.Beginning);
 
             var error = result.Errors.First();
-            error.Position.Should().Be(Position.Beginning);
+            error.Position.Should().Be(Position.Beginning.ToRange());
             error.Message.Should().Be("Unexpected: end of input");
         }
 
@@ -44,7 +44,7 @@ namespace Sprache.Playground
             result.Context.ReadTo.Should().Be(new Position(3, 1, 4));
 
             var error = result.Errors.First();
-            error.Position.Should().Be(new Position(3, 1, 4));
+            error.Position.Should().Be(new Position(3, 1, 4).ToRange());
             error.Message.Should().Be("Unexpected: character 'p'");
         }
 
@@ -62,7 +62,7 @@ namespace Sprache.Playground
             result.Context.ReadTo.Should().Be(new Position(5, 1, 6));
 
             var error = result.Errors.First();
-            error.Position.Should().Be(new Position(5, 1, 6));
+            error.Position.Should().Be(new Position(5, 1, 6).ToRange());
             error.Message.Should().Be("Unexpected: end of input");
         }
 

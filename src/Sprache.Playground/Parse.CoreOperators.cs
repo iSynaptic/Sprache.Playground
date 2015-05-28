@@ -5,103 +5,97 @@ namespace Sprache.Playground
 {
     public static partial class Parse
     {
-        public static Parser<T> InterleaveWith<T>(this Parser<T> @this, Parser<Object> interleaving)
+        public static Parser<ResultInfo<T>> WithInfo<T>(this Parser<T> self) => context =>
         {
-            return context =>
+            var result = self(context);
+            if (result.HasValue)
             {
-                interleaving = context.Interleaving != null
-                                   ? context.Interleaving.Or(interleaving)
-                                   : interleaving;
+                var location = new PositionRange(context.ConsumedTo, result.Context.ConsumedTo);
 
-                var newContext = context.WithInterleave(interleaving);
+                var info = new ResultInfo<T>(result.Value, result.Description, location);
+                return Result.WithValue(info, result.Description, result.Context, result.Errors);
+            }
 
-                return @this(newContext);
-            };
-        }
+            return Result.WithoutValue<ResultInfo<T>>(result.Description, result.Context, result.Errors);
+        };
 
-        public static Parser<T> Interleave<T>(this Parser<T> @this)
+        public static Parser<T> InterleaveWith<T>(this Parser<T> @this, Parser<Object> interleaving) => context =>
         {
-            return context =>
+            interleaving = context.Interleaving != null
+                                ? context.Interleaving.Or(interleaving)
+                                : interleaving;
+
+            var newContext = context.WithInterleave(interleaving);
+
+            return @this(newContext);
+        };
+
+        public static Parser<T> Interleave<T>(this Parser<T> @this) => context =>
+        {
+            if (context.Interleaving != null)
             {
-                if (context.Interleaving != null)
+                var result = context.Interleaving(context);
+                while (result.HasValue)
                 {
-                    var result = context.Interleaving(context);
-                    while (result.HasValue)
-                    {
-                        context = result.Context;
-                        result = context.Interleaving(context);
-                    }
+                    context = result.Context;
+                    result = context.Interleaving(context);
                 }
+            }
 
-                return @this(context);
-            };
-        }
+            return @this(context);
+        };
 
-        public static Parser<T> Or<T>(this Parser<T> first, Parser<T> second)
+        public static Parser<T> Or<T>(this Parser<T> first, Parser<T> second) => context =>
         {
-            return context =>
-            {
-                var firstResult = first(context);
-                if (firstResult.HasValue)
-                    return firstResult;
+            var firstResult = first(context);
+            if (firstResult.HasValue)
+                return firstResult;
 
-                var secondResult = second(context);
-                if (secondResult.HasValue)
-                    return secondResult;
+            var secondResult = second(context);
+            if (secondResult.HasValue)
+                return secondResult;
 
-                return Result.WithoutValue<T>("or",
-                    context,
-                    new ParseError(
-                        context.ReadTo,
-                        string.Format("Expected: {0} or {1}", firstResult.Description, secondResult.Description),
-                        firstResult.Errors.Concat(secondResult.Errors)));
-            };
-        }
+            return Result.WithoutValue<T>("or",
+                context,
+                new ParseError(
+                    context.ReadTo.ToRange(),
+                    string.Format("Expected: {0} or {1}", firstResult.Description, secondResult.Description),
+                    firstResult.Errors.Concat(secondResult.Errors)));
+        };
 
-        public static Parser<U> Select<T, U>(this Parser<T> @this, Func<T, U> selector)
+        public static Parser<U> Select<T, U>(this Parser<T> @this, Func<T, U> selector) => context =>
         {
-            return context =>
-            {
-                var result = @this(context);
-                if (result.HasValue)
-                    return Result.WithValue(selector(result.Value), result.Description, result.Context, result.Errors);
+            var result = @this(context);
+            if (result.HasValue)
+                return Result.WithValue(selector(result.Value), result.Description, result.Context, result.Errors);
 
-                return Result.WithoutValue<U>(result.Description, result.Context, result.Errors);
-            };
-        }
+            return Result.WithoutValue<U>(result.Description, result.Context, result.Errors);
+        };
 
-        public static Parser<U> SelectMany<T, U>(this Parser<T> @this, Func<T, Parser<U>> selector)
+        public static Parser<U> SelectMany<T, U>(this Parser<T> @this, Func<T, Parser<U>> selector) => context =>
         {
-            return context =>
+            var result = @this.Interleave()(context);
+            if (result.HasValue)
             {
-                var result = @this.Interleave()(context);
-                if (result.HasValue)
-                {
-                    var nextResult = selector(result.Value).Interleave()(result.Context);
-                    return nextResult;
-                }
+                var nextResult = selector(result.Value).Interleave()(result.Context);
+                return nextResult;
+            }
 
-                return Result.WithoutValue<U>(result.Description, result.Context, result.Errors);
-            };
-        }
+            return Result.WithoutValue<U>(result.Description, result.Context, result.Errors);
+        };
 
-        public static Parser<T> DescribeAs<T>(this Parser<T> @this, string description)
+        public static Parser<T> DescribeAs<T>(this Parser<T> @this, string description) => context =>
         {
-            return context =>
-            {
-                var result = @this(context);
-                return result.HasValue
-                    ? Result.WithValue(result.Value, description, result.Context, result.Errors)
-                    : Result.WithoutValue<T>(description, result.Context, result.Errors);
-            };
-        }
+            var result = @this(context);
+            return result.HasValue
+                ? Result.WithValue(result.Value, description, result.Context, result.Errors)
+                : Result.WithoutValue<T>(description, result.Context, result.Errors);
+        };
 
         public static Parser<TResult> SelectMany<T, TIntermediate, TResult>(this Parser<T> @this,
                                                                             Func<T, Parser<TIntermediate>> selector,
-                                                                            Func<T, TIntermediate, TResult> combiner)
-        {
-            return SelectMany(@this, x => selector(x).Select(y => combiner(x, y)));
-        }
+                                                                            Func<T, TIntermediate, TResult> combiner) 
+            => SelectMany(@this, x => selector(x).Select(y => combiner(x, y)));
     }
 
 }

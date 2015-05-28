@@ -46,8 +46,10 @@
     <Compile Include="ParseError.cs" />
     <Compile Include="Parser.cs" />
     <Compile Include="Position.cs" />
+    <Compile Include="PositionRange.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Result.cs" />
+    <Compile Include="ResultInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Parse.CoreOperators.cs" />
